@@ -70,6 +70,7 @@ function renderGroup(group) {
   const anchor = group.id ? ` id="item-${group.id}" tabindex="-1"` : "";
   return `<section${anchor}>
     <h2>${escapeHTML(group.name)}</h2>
+    ${group.note ? `<p class="command-hint">${escapeHTML(group.note)}</p>` : ""}
     <${listTag} class="command-list">${group.commands.map((command, index) =>
       renderCommand(command, group.ordered ? index + 1 : undefined)
     ).join("")}</${listTag}>

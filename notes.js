@@ -49,22 +49,23 @@ const phases = [
             id: "save-local-scan",
             title: "Save the results",
             why: "Save the selected-port results so you can compare them after a change.",
-            code: 'nmap -p <port list> -oA "<output prefix>" <local IP address>',
+            code: "nmap -p <port list> -oA scan_initial <local IP address>",
             flags: [
               ["-p", "Checks the comma-separated ports found in step 1."],
-              ["-oA", "Saves normal, XML, and grepable output with the same prefix."],
+              ["-oA", "Saves scan_initial.nmap, scan_initial.xml, and scan_initial.gnmap."],
             ],
           },
         ],
       },
       {
         name: "Local TCP and UDP scans",
+        note: "The -T4 timing template uses faster timings. The --min-rate option requests a minimum send rate in packets per second.",
         commands: [
           { id: "scan-standard", title: "Scan the 1,000 most common TCP ports", code: "nmap <local IP address>" },
           { id: "ports-nmap", title: "Check selected ports", code: "nmap -p <port list> <local IP address>", hint: "Enter a comma-separated port list." },
-          { id: "raison-nmap", title: "Show the reason for each port state", code: "nmap -vv --reason -p <port list> <local IP address>" },
-          { id: "top-tcp", title: "Check the most common TCP ports", code: "nmap --top-ports <port count> <local IP address>" },
-          { id: "top-udp", title: "Check the most common UDP ports", code: "sudo nmap -sU --top-ports <port count> <local IP address>" },
+          { id: "raison-nmap", title: "Explain the states of TCP ports 22 and 80", code: "nmap --reason -p22,80 <local IP address>" },
+          { id: "top-tcp", title: "Check the 20 most common TCP ports", code: "nmap --top-ports 20 <local IP address>" },
+          { id: "top-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
         ],
       },
       {
@@ -77,6 +78,7 @@ const phases = [
       {
         name: "HTTP",
         commands: [
+          { id: "local-web-ports", title: "Check local TCP ports 80, 8080, and 8000", code: "nmap -p80,8080,8000 <local IP address>" },
           { id: "whatweb-local", title: "Identify technologies on your local site", code: 'whatweb "http://<local host>:<port>/"' },
           { id: "reponse-http", title: "Show the response and headers", code: 'curl -i "http://<local host>:<port>/"' },
           { id: "http-detaille", title: "Show request details", code: 'curl -v "http://<local host>:<port>/"' },
