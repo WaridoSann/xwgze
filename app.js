@@ -65,15 +65,28 @@ function referenceLinks(ids) {
   }).join("")}</ul>`;
 }
 
+function renderWorkflow(group) {
+  const commands = new Map(group.commands.map(command => [command.id, command]));
+  return `<ol class="workflow-steps">${group.steps.map(step => `
+    <li class="workflow-step" id="item-${step.id}" tabindex="-1">
+      <h3>${escapeHTML(step.title)}</h3>
+      <p class="command-hint">${escapeHTML(step.description)}</p>
+      ${step.commandIds ? `<ul class="command-list">${step.commandIds.map(id => renderCommand(commands.get(id))).join("")}</ul>` : ""}
+    </li>`).join("")}
+  </ol>
+  <p class="command-hint workflow-summary">${escapeHTML(group.summary)}</p>`;
+}
+
 function renderGroup(group) {
   const listTag = group.ordered ? "ol" : "ul";
   const anchor = group.id ? ` id="item-${group.id}" tabindex="-1"` : "";
+  const content = group.steps ? renderWorkflow(group) : `<${listTag} class="command-list">${group.commands.map((command, index) =>
+    renderCommand(command, group.ordered ? index + 1 : undefined)
+  ).join("")}</${listTag}>`;
   return `<section${anchor}>
     <h2>${escapeHTML(group.name)}</h2>
     ${group.note ? `<p class="command-hint">${escapeHTML(group.note)}</p>` : ""}
-    <${listTag} class="command-list">${group.commands.map((command, index) =>
-      renderCommand(command, group.ordered ? index + 1 : undefined)
-    ).join("")}</${listTag}>
+    ${content}
   </section>`;
 }
 
@@ -123,6 +136,9 @@ const searchIndex = [
   })),
   ...phases.flatMap(phase => phase.groups.flatMap(group => [
     ...(group.id ? [{ title: group.name, context: phase.title, href: `#${phase.id}/${group.id}`, keywords: "" }] : []),
+    ...(group.steps || []).map(step => ({
+      title: step.title, context: phase.title, href: `#${phase.id}/${step.id}`, keywords: step.description,
+    })),
     ...group.commands.map(command => ({
       title: command.title, context: phase.title, href: `#${phase.id}/${command.id}`,
       keywords: `${group.name} ${command.code} ${command.hint || ""} ${command.why || ""}`,
