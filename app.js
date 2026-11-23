@@ -40,12 +40,18 @@ function renderHome() {
     </nav>`;
 }
 
-function renderCommand(command) {
+function renderCommand(command, step) {
   const title = escapeHTML(command.title);
+  const heading = step ? `${step}. ${title}` : title;
+  const flags = command.flags ? `<dl class="command-flags">${command.flags.map(([flag, description]) =>
+    `<dt><code>${escapeHTML(flag)}</code></dt><dd>${escapeHTML(description)}</dd>`
+  ).join("")}</dl>` : "";
   return `<li class="command" id="item-${command.id}" tabindex="-1">
     <div class="command-text">
-      <p class="command-title">${title}</p>
+      <p class="command-title">${heading}</p>
+      ${command.why ? `<p class="command-hint">${escapeHTML(command.why)}</p>` : ""}
       <pre><code>${escapeHTML(command.code)}</code></pre>
+      ${flags}
       ${command.hint ? `<p class="command-hint">${escapeHTML(command.hint)}</p>` : ""}
     </div>
     <button type="button" aria-label="Copy ${title}" data-copy>Copy</button>
@@ -59,13 +65,21 @@ function referenceLinks(ids) {
   }).join("")}</ul>`;
 }
 
+function renderGroup(group) {
+  const listTag = group.ordered ? "ol" : "ul";
+  const anchor = group.id ? ` id="item-${group.id}" tabindex="-1"` : "";
+  return `<section${anchor}>
+    <h2>${escapeHTML(group.name)}</h2>
+    <${listTag} class="command-list">${group.commands.map((command, index) =>
+      renderCommand(command, group.ordered ? index + 1 : undefined)
+    ).join("")}</${listTag}>
+  </section>`;
+}
+
 function renderPhase(phase) {
   main.className = "document";
   main.innerHTML = `${pageHeader(phase.title)}
-    ${phase.groups.map(group => `<section>
-      <h2>${escapeHTML(group.name)}</h2>
-      <ul class="command-list">${group.commands.map(renderCommand).join("")}</ul>
-    </section>`).join("")}
+    ${phase.groups.map(renderGroup).join("")}
     <section class="references">
       <h2>References</h2>
       ${referenceLinks(phase.references)}
@@ -106,10 +120,13 @@ const searchIndex = [
   ...phases.map(phase => ({
     title: phase.title, href: `#${phase.id}`, keywords: phase.keywords || "",
   })),
-  ...phases.flatMap(phase => phase.groups.flatMap(group => group.commands.map(command => ({
-    title: command.title, context: phase.title, href: `#${phase.id}/${command.id}`,
-    keywords: `${group.name} ${command.code} ${command.hint || ""}`,
-  })))),
+  ...phases.flatMap(phase => phase.groups.flatMap(group => [
+    ...(group.id ? [{ title: group.name, context: phase.title, href: `#${phase.id}/${group.id}`, keywords: "" }] : []),
+    ...group.commands.map(command => ({
+      title: command.title, context: phase.title, href: `#${phase.id}/${command.id}`,
+      keywords: `${group.name} ${command.code} ${command.hint || ""} ${command.why || ""}`,
+    })),
+  ])),
   ...Object.entries(resources).map(([id, resource]) => ({
     title: resource.name, context: "Resources", href: `#ressources/${id}`, keywords: resource.keywords || "",
   })),

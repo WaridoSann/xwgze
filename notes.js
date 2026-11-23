@@ -2,6 +2,7 @@ const resources = {
   ptes: { name: "PTES", url: "https://pentest-standard.readthedocs.io/en/latest/" },
   nmap: { name: "Nmap Documentation", url: "https://nmap.org/book/man.html" },
   whatweb: { name: "WhatWeb", url: "https://github.com/urbanadventurer/WhatWeb" },
+  samba: { name: "Samba testparm", url: "https://manpages.debian.org/stable/samba-common-bin/testparm.1.en.html", keywords: "SMB configuration" },
   stride: { name: "OWASP Threat Modeling", url: "https://community.owasp.org/Threat_Modeling", keywords: "STRIDE flows trust boundaries" },
   cve: { name: "CVE Program", url: "https://www.cve.org/" },
   pwstorage: { name: "OWASP Password Storage", url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", keywords: "hashing Argon2id scrypt bcrypt PBKDF2" },
@@ -15,33 +16,79 @@ const phases = [
     id: "reconnaissance",
     title: "Reconnaissance",
     tileTitle: "Reconnais\u00adsance",
-    references: ["nmap", "whatweb"],
+    references: ["nmap", "whatweb", "samba"],
     groups: [
+      {
+        id: "workflow",
+        name: "Workflow",
+        ordered: true,
+        commands: [
+          {
+            id: "tcp-complet",
+            title: "Discover open local TCP ports",
+            why: "Check the full TCP range to find listeners outside Nmap’s default port list.",
+            code: "nmap -p- --open <local IP address>",
+            flags: [
+              ["-p-", "Checks TCP ports 1 through 65,535."],
+              ["--open", "Shows open or potentially open ports."],
+            ],
+          },
+          {
+            id: "local-tcp-services",
+            title: "Match ports to local services",
+            why: "Run this on the same machine to match each listening port to its process.",
+            code: "ss -lntp",
+            flags: [
+              ["-l", "Shows listening sockets."],
+              ["-n", "Shows numeric ports and addresses."],
+              ["-t", "Limits the list to TCP."],
+              ["-p", "Shows process details when your account can access them."],
+            ],
+          },
+          {
+            id: "save-local-scan",
+            title: "Save the results",
+            why: "Save the selected-port results so you can compare them after a change.",
+            code: 'nmap -p <port list> -oA "<output prefix>" <local IP address>',
+            flags: [
+              ["-p", "Checks the comma-separated ports found in step 1."],
+              ["-oA", "Saves normal, XML, and grepable output with the same prefix."],
+            ],
+          },
+        ],
+      },
       {
         name: "Local TCP and UDP scans",
         commands: [
           { id: "scan-standard", title: "Scan the 1,000 most common TCP ports", code: "nmap <local IP address>" },
-          { id: "tcp-complet", title: "Check all local TCP ports", code: "nmap -p- <local IP address>" },
           { id: "ports-nmap", title: "Check selected ports", code: "nmap -p <port list> <local IP address>", hint: "Enter a comma-separated port list." },
-          { id: "raison-nmap", title: "Show the reason for each port state", code: "nmap -vv --reason <local IP address>" },
+          { id: "raison-nmap", title: "Show the reason for each port state", code: "nmap -vv --reason -p <port list> <local IP address>" },
           { id: "top-tcp", title: "Check the most common TCP ports", code: "nmap --top-ports <port count> <local IP address>" },
           { id: "top-udp", title: "Check the most common UDP ports", code: "sudo nmap -sU --top-ports <port count> <local IP address>" },
         ],
       },
       {
-        name: "Local network",
+        name: "Local system and network",
         commands: [
           { id: "adresse-vpn", title: "Show the VPN interface’s IPv4 address", code: "ip -4 addr show <VPN interface>" },
+          { id: "linux-release", title: "Read the installed Linux release", code: "cat /etc/os-release" },
         ],
       },
       {
         name: "HTTP",
         commands: [
+          { id: "whatweb-local", title: "Identify technologies on your local site", code: 'whatweb "http://<local host>:<port>/"' },
           { id: "reponse-http", title: "Show the response and headers", code: 'curl -i "http://<local host>:<port>/"' },
           { id: "http-detaille", title: "Show request details", code: 'curl -v "http://<local host>:<port>/"' },
           { id: "entetes-web-locaux", title: "Show only the headers", code: 'curl -I "http://<local host>:<port>/"' },
           { id: "telecharger-http", title: "Save a file from the local server", code: 'curl -fS -o "<output file>" "http://<local host>:<port>/<remote path>"' },
           { id: "serveur-http-local", title: "Serve a directory on the loopback interface", code: 'python3 -m http.server <port> --bind <loopback IP address> --directory "<directory path>"' },
+        ],
+      },
+      {
+        name: "SMB",
+        commands: [
+          { id: "local-samba-config", title: "Validate the local Samba configuration", code: "testparm -s", hint: "Run on your Samba host to validate and print its effective configuration." },
         ],
       },
     ],
