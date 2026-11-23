@@ -57,11 +57,12 @@ const phases = [
         commands: [
           {
             id: "tcp-complet",
-            title: "Discover open local TCP ports",
-            code: "nmap -p- --open <local IP address>",
+            title: "Scan all local TCP ports",
+            code: "nmap -p- -T4 --min-rate=2000 <local IP address>",
             flags: [
               ["-p-", "Checks TCP ports 1 through 65,535."],
-              ["--open", "Shows open or potentially open ports."],
+              ["-T4", "Selects Nmap’s faster timing profile."],
+              ["--min-rate=2000", "Requests a minimum send rate of 2,000 packets per second."],
             ],
           },
           { id: "workflow-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
@@ -79,7 +80,6 @@ const phases = [
       },
       {
         name: "Local TCP and UDP scans",
-        note: "The -T4 timing template uses faster timings. The --min-rate option requests a minimum send rate in packets per second.",
         commands: [
           { id: "scan-standard", title: "Scan the 1,000 most common TCP ports", code: "nmap <local IP address>" },
           { id: "ports-nmap", title: "Check selected ports", code: "nmap -p <port list> <local IP address>", hint: "Enter a comma-separated port list." },
