@@ -1,15 +1,3 @@
-const phaseIcons = {
-  reconnaissance: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 6-6M12 12h.01"/>',
-  "internal-services": '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4m-6 4v-4h12v4"/>',
-  vulnerabilites: '<path d="M12 3 4.5 6v5.3c0 4.3 3 7.6 7.5 9.7 4.5-2.1 7.5-5.4 7.5-9.7V6L12 3Z"/><path d="m9 12 2 2 4-4"/>',
-  exploitation: '<path d="m4 7 4.5 4.5L4 16m8 0h7"/>',
-  "post-exploitation": '<path d="M3 12h4l2.5-6 4.5 12 2.5-6H21"/>',
-  "web-enumeration": '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a12 12 0 0 1 0 16 12 12 0 0 1 0-16Z"/>',
-  privesc: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3m-4 4v2"/>',
-  verification: '<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
-  rapport: '<path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M13 3v6h6M8 13h8m-8 4h8"/>',
-};
-
 const main = document.getElementById("main");
 const searchDialog = document.getElementById("search-dialog");
 const searchInput = document.getElementById("search-input");
@@ -21,48 +9,12 @@ const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[character]);
 
-const legacyEntries = {
-  workflow: "reconnaissance",
-  "workflow-network": "reconnaissance",
-  "workflow-web": "web-enumeration",
-  "workflow-whatweb": "whatweb-local",
-  "workflow-advisories": "vulnerabilites",
-  "workflow-linux": "post-exploitation",
-  "workflow-account": "identite-linux",
-  "workflow-os": "linux-release",
-  "workflow-files": "home-directories",
-  "workflow-permissions": "privesc",
-  "workflow-schedules": "taches-systemd",
-  "workflow-report": "rapport",
-};
-
-function icon(id) {
-  return `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${phaseIcons[id]}</svg>`;
-}
-
 function pageHeader(title, includeReferences = true) {
   return `<nav aria-label="Workflow navigation">
-    <a href="#accueil">All stages</a>
-    <div class="nav-actions">
-      ${includeReferences ? '<a href="#ressources">References</a>' : ""}
-      <button type="button" data-search>Search</button>
-    </div>
+    ${includeReferences ? '<a href="#ressources">References</a>' : '<a href="#reconnaissance">Reconnaissance</a>'}
+    <button type="button" data-search>Search</button>
   </nav>
   <h1>${escapeHTML(title)}</h1>`;
-}
-
-function renderHome() {
-  main.className = "home";
-  main.innerHTML = `
-    <h1 class="visually-hidden">Pentesting Workflow</h1>
-    <nav aria-label="Workflow stages">
-      <ul class="phase-grid">${stages.map(stage => `
-        <li><a href="#${stage.id}" class="phase-link" aria-label="${escapeHTML(stage.title)}">
-          <span class="phase-icon">${icon(stage.id)}</span>
-          <span>${escapeHTML(stage.tileTitle || stage.title)}</span>
-        </a></li>`).join("")}
-      </ul>
-    </nav>`;
 }
 
 function renderCommands(commands) {
@@ -105,7 +57,7 @@ function renderGuidance(item) {
 
 function renderWorkflow() {
   main.className = "document workflow-page";
-  main.innerHTML = `${pageHeader("Workflow")}
+  main.innerHTML = `${pageHeader("Reconnaissance Workflow")}
     <div class="stages">${stages.map(stage => renderDisclosure(stage, `
       ${renderGuidance(stage)}
       ${renderCommands(stage.commands)}
@@ -136,24 +88,20 @@ function navigate(moveFocus = false) {
   const fragment = location.hash.slice(1);
   const [page, entry] = fragment.split("/");
   const resource = page === "ressources";
-  const namedStage = page === "modelisation" ? "vulnerabilites" : page;
-  const entryId = legacyEntries[entry] || entry;
-  const selected = resource ? undefined : workflowIndex.find(item => item.id === entryId) ||
-    workflowIndex.find(item => item.id === namedStage);
+  const selected = resource ? undefined : workflowIndex.find(item => item.id === entry) ||
+    workflowIndex.find(item => item.id === page);
   let target;
 
   if (resource) {
     renderResources();
     target = entry && document.getElementById(`item-${entry}`);
-    document.title = "References · Pentesting Workflow";
-  } else if (selected || page === "workflow") {
-    if (!main.classList.contains("workflow-page")) renderWorkflow();
-    target = selected && document.getElementById(`item-${selected.id}`);
-    if (selected && location.hash !== selected.href) history.replaceState(null, "", selected.href);
-    document.title = selected ? `${selected.context || selected.title} · Pentesting Workflow` : "Pentesting Workflow";
+    document.title = "References · Reconnaissance Workflow";
   } else {
-    renderHome();
-    document.title = "Pentesting Workflow";
+    if (!main.classList.contains("workflow-page")) renderWorkflow();
+    const resolved = selected || workflowIndex[0];
+    target = document.getElementById(`item-${resolved.id}`);
+    if (fragment && location.hash !== resolved.href) history.replaceState(null, "", resolved.href);
+    document.title = "Reconnaissance Workflow";
   }
 
   if (target) {
@@ -161,6 +109,8 @@ function navigate(moveFocus = false) {
       details.open = true;
       syncExpanded(details);
     }
+  }
+  if (target && (selected || resource)) {
     target.scrollIntoView({ block: "start" });
     const focusTarget = target instanceof HTMLDetailsElement ? target.firstElementChild : target;
     focusTarget.focus({ preventScroll: true });
