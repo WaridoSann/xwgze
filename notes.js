@@ -2,7 +2,6 @@ const resources = {
   ptes: { name: "PTES", url: "https://pentest-standard.readthedocs.io/en/latest/" },
   nmap: { name: "Documentation Nmap", url: "https://nmap.org/book/man.html" },
   whatweb: { name: "WhatWeb", url: "https://github.com/urbanadventurer/WhatWeb" },
-  microsoft: { name: "Microsoft Learn", url: "https://learn.microsoft.com/fr-fr/powershell/module/nettcpip/get-nettcpconnection" },
   stride: { name: "OWASP Threat Modeling", url: "https://community.owasp.org/Threat_Modeling", keywords: "STRIDE flux frontières de confiance" },
   cve: { name: "CVE Program", url: "https://www.cve.org/" },
   pwstorage: { name: "OWASP Password Storage", url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", keywords: "hachage Argon2id scrypt bcrypt PBKDF2" },
@@ -16,29 +15,33 @@ const phases = [
     id: "reconnaissance",
     title: "Reconnaissance",
     tileTitle: "Reconnais\u00adsance",
-    references: ["nmap", "whatweb", "microsoft"],
+    references: ["nmap", "whatweb"],
     groups: [
       {
-        name: "DNS",
+        name: "Scans TCP et UDP",
         commands: [
-          { id: "adresses-dns", title: "Relever les adresses IPv4 et IPv6", code: "dig +short example.org A\ndig +short example.org AAAA" },
+          { id: "scan-standard", title: "Scan standard sur les 1 000 ports TCP courants", code: "nmap 127.0.0.1" },
+          { id: "tcp-complet", title: "Vérifier tous les ports TCP locaux", code: "nmap -p- 127.0.0.1" },
+          { id: "ports-nmap", title: "Vérifier uniquement les ports sélectionnés", code: "nmap -p 22,80,443 127.0.0.1" },
+          { id: "raison-nmap", title: "Afficher la raison de l’état de chaque port", code: "nmap -vv --reason 127.0.0.1" },
+          { id: "top-tcp", title: "Vérifier les 20 ports TCP les plus courants", code: "nmap --top-ports 20 127.0.0.1" },
+          { id: "top-udp", title: "Vérifier les 20 ports UDP les plus courants", code: "sudo nmap -sU --top-ports 20 127.0.0.1" },
         ],
       },
       {
-        name: "Ports et services locaux",
+        name: "Réseau local",
         commands: [
-          { id: "ports-nmap", title: "Nmap — vérifier trois ports sur la boucle locale", code: "nmap -sT -p 80,443,8000 127.0.0.1" },
-          { id: "interfaces-nmap", title: "Nmap — afficher les interfaces et les routes", code: "nmap --iflist" },
-          { id: "ports-linux", title: "Ports à l’écoute sous Linux", code: "ss -lntp" },
-          { id: "ports-windows", title: "Ports et PID sous Windows", code: "Get-NetTCPConnection -State Listen |\n  Sort-Object LocalPort |\n  Select-Object LocalAddress, LocalPort, OwningProcess" },
-          { id: "service-windows", title: "Relier un PID à un service Windows", code: "$servicePid = 1234\nGet-CimInstance Win32_Service |\n  Where-Object ProcessId -eq $servicePid |\n  Select-Object Name, DisplayName, StartName", hint: "Remplace 1234 par le PID relevé." },
+          { id: "adresse-vpn", title: "Afficher l’IPv4 de l’interface VPN", code: "ip -4 addr show tun0" },
         ],
       },
       {
-        name: "Empreinte web",
+        name: "HTTP",
         commands: [
-          { id: "whatweb-local", title: "WhatWeb — identifier les technologies du site local", code: "whatweb http://127.0.0.1:8000/" },
-          { id: "entetes-web-locaux", title: "curl — lire les en-têtes du site local", code: "curl -sSI http://127.0.0.1:8000/" },
+          { id: "reponse-http", title: "Afficher la réponse et les en-têtes", code: "curl -i http://127.0.0.1:1337/" },
+          { id: "http-detaille", title: "Afficher le détail de la requête", code: "curl -v http://127.0.0.1:1337/" },
+          { id: "entetes-web-locaux", title: "Lire uniquement les en-têtes", code: "curl -I http://127.0.0.1:1337/" },
+          { id: "telecharger-http", title: "Enregistrer un fichier depuis le serveur local", code: "curl -fS -o ./fichier http://127.0.0.1:1337/fichier" },
+          { id: "serveur-http-local", title: "Servir le dossier public sur la boucle locale", code: "python3 -m http.server 1337 --bind 127.0.0.1 --directory ./public" },
         ],
       },
     ],
@@ -113,20 +116,48 @@ const phases = [
   {
     id: "post-exploitation",
     title: "Post-exploitation",
-    keywords: "privesc élévation de privilèges impact",
+    keywords: "Linux inventaire permissions impact",
     references: ["ptes"],
     groups: [
       {
-        name: "Identité et permissions",
+        name: "Comptes et fichiers",
         commands: [
-          { id: "identite-linux", title: "Confirmer l’identité Linux", code: "whoami\nid\ngroups" },
-          { id: "chemin-linux", title: "Lire les droits le long d’un chemin", code: "namei -l ./preuve.txt" },
+          { id: "identite-linux", title: "Vérifier l’identité et les groupes", code: "whoami\nid" },
+          { id: "comptes-linux", title: "Lister les comptes connus du système", code: "getent passwd" },
+          { id: "repertoire-actuel", title: "Afficher le répertoire actuel", code: "pwd" },
+          { id: "fichiers-caches", title: "Lister aussi les fichiers cachés", code: "ls -la" },
+          { id: "type-fichier", title: "Identifier le type d’un fichier", code: "file ./preuve.txt" },
         ],
       },
       {
-        name: "Journaux",
+        name: "Permissions",
         commands: [
-          { id: "journaux-linux", title: "Relire les avertissements du jour", code: "journalctl --since today --priority warning --no-pager" },
+          { id: "permissions-dossier", title: "Lire les permissions d’un dossier", code: "ls -ld ./" },
+          { id: "chemin-linux", title: "Lire les permissions sur tout le chemin", code: "namei -l ./preuve.txt" },
+        ],
+      },
+      {
+        name: "Services",
+        commands: [
+          { id: "services-actifs", title: "Lister les services actifs", code: "systemctl list-units --type=service --state=running" },
+          { id: "configuration-service", title: "Lire la configuration d’un service systemd", code: "systemctl cat NOM_SERVICE", hint: "Remplace NOM_SERVICE par le nom de l’unité." },
+          { id: "configuration-nginx", title: "Lire les configurations Nginx activées", code: "cat /etc/nginx/sites-enabled/*" },
+        ],
+      },
+      {
+        name: "Tâches planifiées",
+        commands: [
+          { id: "cron-systeme", title: "Lire le crontab système", code: "cat /etc/crontab" },
+          { id: "cron-supplementaire", title: "Lister les fichiers cron supplémentaires", code: "ls -la /etc/cron.d/" },
+          { id: "taches-systemd", title: "Lister les timers systemd", code: "systemctl list-timers --all" },
+        ],
+      },
+      {
+        name: "Clés SSH locales",
+        commands: [
+          { id: "paire-ed25519", title: "Générer une paire Ed25519", code: 'ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_audit"' },
+          { id: "cle-publique", title: "Afficher la clé publique", code: 'cat "$HOME/.ssh/id_ed25519_audit.pub"' },
+          { id: "permissions-cle", title: "Limiter l’accès à la clé privée", code: 'chmod 600 "$HOME/.ssh/id_ed25519_audit"' },
         ],
       },
     ],
