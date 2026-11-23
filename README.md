@@ -1,20 +1,22 @@
-# Carnet PTES
+# PTES Notebook
 
-Six phases PTES, des commandes d’audit copiables et des références pour les cours et les labos.
+Six PTES phases with copyable audit commands and references.
 
-## Ouvrir le carnet
+## Open the notebook
 
-Télécharge le dépôt, décompresse l’archive et ouvre `index.html`. La navigation et les commandes fonctionnent sans connexion. Les références externes s’ouvrent avec une connexion. Aucun outil de compilation n’est nécessaire.
+Download the repository, unzip it, and open `index.html`. The notebook works offline. External references require an internet connection.
 
-## Publier sur GitHub Pages
+Replace the angle-bracket placeholders, such as `<local IP address>` or `<file path>`, with your own values before running a command.
 
-Dans **Settings → Pages**, choisis **Deploy from a branch**, puis **main** et **/(root)**. Enregistre. GitHub affichera l’adresse une fois le déploiement terminé.
+## Publish on GitHub Pages
 
-## Ajouter une note
+In **Settings → Pages**, select **Deploy from a branch**, choose **main** and **/(root)**, then save.
 
-Les phases, les commandes et les ressources se trouvent dans [notes.js](notes.js). Ajoute dans une catégorie un identifiant unique, un titre et une commande. Le champ `hint` permet de préciser un paramètre si nécessaire. Utilise des exemples génériques pour les notes publiques.
+## Add a note
 
-## Références de design
+Edit [notes.js](notes.js) to add a command to a category. Give it a unique ID, a title, and the command. Add a `hint` when an argument needs a short explanation. Use placeholders for environment-specific values.
 
-- [Frontend Design](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md) pour la hiérarchie, la typographie et les textes courts.
-- [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md) pour le clavier, le focus et la mise en page mobile.
+## Design references
+
+- Typography, hierarchy, and concise interface copy. [Frontend Design](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md)
+- Keyboard access, focus, and mobile layout. [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md)

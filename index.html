@@ -1,25 +1,25 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Carnet PTES. Six phases, commandes d’audit et références.">
+  <meta name="description" content="PTES Notebook. Six phases, audit commands, and references.">
   <meta name="theme-color" content="#ffffff">
-  <title>Carnet PTES</title>
+  <title>PTES Notebook</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./notes.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
   <main id="main" tabindex="-1">
-    <noscript>Active JavaScript pour ouvrir les fiches.</noscript>
+    <noscript>Enable JavaScript to open the notes.</noscript>
   </main>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-header">
-      <h2 id="search-title">Rechercher</h2>
-      <form method="dialog"><button type="submit">Fermer</button></form>
+      <h2 id="search-title">Search</h2>
+      <form method="dialog"><button type="submit">Close</button></form>
     </div>
-    <input type="search" id="search-input" aria-label="Mot-clé ou commande" placeholder="Mot-clé ou commande…" autocomplete="off" spellcheck="false">
+    <input type="search" id="search-input" aria-label="Keyword or command" placeholder="Keyword or command…" autocomplete="off" spellcheck="false">
     <p id="search-summary" role="status"></p>
     <ul id="search-results"></ul>
   </dialog>

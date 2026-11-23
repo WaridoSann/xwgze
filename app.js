@@ -19,9 +19,9 @@ const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({
 })[character]);
 
 function pageHeader(title) {
-  return `<nav aria-label="Navigation du carnet">
-    <a href="#accueil">Toutes les phases</a>
-    <button type="button" data-search>Rechercher</button>
+  return `<nav aria-label="Notebook navigation">
+    <a href="#accueil">All phases</a>
+    <button type="button" data-search>Search</button>
   </nav>
   <h1>${escapeHTML(title)}</h1>`;
 }
@@ -29,8 +29,8 @@ function pageHeader(title) {
 function renderHome() {
   main.className = "home";
   main.innerHTML = `
-    <h1 class="visually-hidden">Carnet PTES</h1>
-    <nav aria-label="Phases PTES">
+    <h1 class="visually-hidden">PTES Notebook</h1>
+    <nav aria-label="PTES phases">
       <ul class="phase-grid">${phases.map(phase => `
         <li><a href="#${phase.id}" class="phase-link" aria-label="${escapeHTML(phase.title)}">
           <span class="phase-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${phaseIcons[phase.id]}</svg></span>
@@ -48,7 +48,7 @@ function renderCommand(command) {
       <pre><code>${escapeHTML(command.code)}</code></pre>
       ${command.hint ? `<p class="command-hint">${escapeHTML(command.hint)}</p>` : ""}
     </div>
-    <button type="button" aria-label="Copier : ${title}" data-copy>Copier</button>
+    <button type="button" aria-label="Copy ${title}" data-copy>Copy</button>
   </li>`;
 }
 
@@ -67,26 +67,26 @@ function renderPhase(phase) {
       <ul class="command-list">${group.commands.map(renderCommand).join("")}</ul>
     </section>`).join("")}
     <section class="references">
-      <h2>Références</h2>
+      <h2>References</h2>
       ${referenceLinks(phase.references)}
     </section>`;
 }
 
 function renderResources() {
   main.className = "document";
-  main.innerHTML = `${pageHeader("Ressources")}${referenceLinks(Object.keys(resources))}`;
+  main.innerHTML = `${pageHeader("Resources")}${referenceLinks(Object.keys(resources))}`;
 }
 
 function navigate(moveFocus = false) {
   const [page, entry] = location.hash.slice(1).split("/");
   const phase = phases.find(item => item.id === page);
-  const title = phase?.title || (page === "ressources" ? "Ressources" : "");
+  const title = phase?.title || (page === "ressources" ? "Resources" : "");
 
   if (phase) renderPhase(phase);
   else if (page === "ressources") renderResources();
   else renderHome();
 
-  document.title = title ? `${title} · Carnet PTES` : "Carnet PTES";
+  document.title = title ? `${title} · PTES Notebook` : "PTES Notebook";
 
   const target = entry && document.getElementById(`item-${entry}`);
   if (target) {
@@ -111,7 +111,7 @@ const searchIndex = [
     keywords: `${group.name} ${command.code} ${command.hint || ""}`,
   })))),
   ...Object.entries(resources).map(([id, resource]) => ({
-    title: resource.name, context: "Ressources", href: `#ressources/${id}`, keywords: resource.keywords || "",
+    title: resource.name, context: "Resources", href: `#ressources/${id}`, keywords: resource.keywords || "",
   })),
 ].map(item => ({ ...item, text: normalize(`${item.title} ${item.context || ""} ${item.keywords}`) }));
 
@@ -121,7 +121,7 @@ function showSearchResults() {
   const matches = query
     ? searchIndex.filter(item => words.every(word => item.text.includes(word)))
     : searchIndex.slice(0, phases.length);
-  searchSummary.textContent = matches.length ? "" : "Aucun résultat.";
+  searchSummary.textContent = matches.length ? "" : "No results.";
   searchResults.innerHTML = matches.map(item => `<li><a href="${item.href}">
     <span>${escapeHTML(item.title)}</span>
     ${item.context ? `<small>${escapeHTML(item.context)}</small>` : ""}
@@ -150,10 +150,10 @@ async function copyCommand(button) {
     copied = document.execCommand("copy");
     if (copied) selection.removeAllRanges();
   }
-  button.textContent = copied ? "Copié" : "Sélectionné";
-  copyStatus.textContent = copied ? "Copié dans le presse-papiers." : "Texte sélectionné. Utilise le raccourci de copie.";
+  button.textContent = copied ? "Copied" : "Selected";
+  copyStatus.textContent = copied ? "Copied to the clipboard." : "Text selected. Use your copy shortcut.";
   clearTimeout(copyTimers.get(button));
-  copyTimers.set(button, setTimeout(() => { button.textContent = "Copier"; }, 2200));
+  copyTimers.set(button, setTimeout(() => { button.textContent = "Copy"; }, 2200));
 }
 
 const copyTimers = new WeakMap();
