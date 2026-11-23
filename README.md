@@ -1,6 +1,6 @@
 # Carnet PTES
 
-Le carnet de pentest de WaridoSann. Six phases PTES, des commandes d’audit copiables et des références pour les cours et les labos.
+Six phases PTES, des commandes d’audit copiables et des références pour les cours et les labos.
 
 ## Ouvrir le carnet
 
@@ -12,7 +12,7 @@ Dans **Settings → Pages**, choisis **Deploy from a branch**, puis **main** et 
 
 ## Ajouter une note
 
-Les phases, les commandes et les ressources se trouvent dans [notes.js](notes.js). Ajoute à la phase concernée une commande avec un identifiant unique, un titre, le shell, la commande et une phrase expliquant son usage. Utilise des exemples génériques pour les notes publiques.
+Les phases, les commandes et les ressources se trouvent dans [notes.js](notes.js). Ajoute dans une catégorie un identifiant unique, un titre et une commande. Le champ `hint` permet de préciser un paramètre si nécessaire. Utilise des exemples génériques pour les notes publiques.
 
 ## Références de design
 
