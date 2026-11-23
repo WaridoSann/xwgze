@@ -28,8 +28,8 @@ const phases = [
           {
             id: "workflow-network",
             title: "Network reconnaissance with Nmap",
-            description: "Inventory open TCP ports. Check common UDP ports when the system uses UDP services.",
-            commandIds: ["tcp-complet", "workflow-udp"],
+            description: "Choose the checks that match what you need to verify on your local test host.",
+            commandIds: ["tcp-complet", "nmap-services", "nmap-version-all", "nmap-os", "workflow-udp", "nmap-no-discovery"],
           },
           {
             id: "workflow-web",
@@ -65,7 +65,26 @@ const phases = [
               ["--min-rate=2000", "Requests a minimum send rate of 2,000 packets per second."],
             ],
           },
+          {
+            id: "nmap-services",
+            title: "Identify services and versions",
+            code: "nmap -sC -sV -p <port list> <local IP address>",
+            hint: "Run the default NSE scripts and version probes on a comma-separated port list.",
+          },
+          {
+            id: "nmap-version-all",
+            title: "Probe an unidentified service",
+            code: "nmap -sV --version-all -p <port> <local IP address>",
+            hint: "Try every version-detection probe on the selected port.",
+          },
+          { id: "nmap-os", title: "Estimate the operating system", code: "sudo nmap -O --osscan-guess <local IP address>" },
           { id: "workflow-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
+          {
+            id: "nmap-no-discovery",
+            title: "Scan when the host does not answer ping",
+            code: "nmap -Pn -n -sC -sV <local IP address>",
+            hint: "Skip host discovery and DNS lookups before running the scan.",
+          },
           { id: "workflow-whatweb", title: "Identify web technologies", code: 'whatweb "http://<local host>:<port>/"' },
           {
             id: "save-local-scan",
