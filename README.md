@@ -1,22 +1,21 @@
-# PTES Notebook
+# Pentesting Workflow
 
-Six PTES phases with copyable audit commands and references.
+An interactive reference for authorized security assessments and educational labs. It organizes commands and guidance from reconnaissance through verification and reporting.
 
-## Open the notebook
+## Features
 
-Download the repository, unzip it, and open `index.html`. The notebook works offline. External references require an internet connection.
+- Nine independently expandable stages with context for when to use each check.
+- Copyable commands, advanced Nmap checks, and optional web enumeration subsections.
+- Search by stage, tool, or command with Ctrl+K or Cmd+K.
 
-Replace the angle-bracket placeholders, such as `<local IP address>` or `<file path>`, with your own values before running a command.
+## Getting started
 
-## Publish on GitHub Pages
+Download or clone the repository and open `index.html` in a modern browser. No installation or build step is required. Replace placeholders such as `<local IP address>` with values from your authorized environment before running a command.
 
-In **Settings → Pages**, select **Deploy from a branch**, choose **main** and **/(root)**, then save.
+## Tech stack and structure
 
-## Add a note
+The site uses HTML, CSS, and vanilla JavaScript. `notes.js` holds the workflow and references, `app.js` handles navigation and interaction, and `styles.css` defines the layout. DM Sans is distributed under the included SIL Open Font License. [Font license](assets/OFL-DM-Sans.txt)
 
-Edit [notes.js](notes.js) to add a command to a category. Give it a unique ID, a title, and the command. Add a `hint` when an argument needs a short explanation. Use placeholders for environment-specific values.
+## Disclaimer
 
-## Design references
-
-- Typography, hierarchy, and concise interface copy. [Frontend Design](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md)
-- Keyboard access, focus, and mobile layout. [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md)
+Use this reference only on systems you own or have explicit permission to assess.

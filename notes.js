@@ -1,300 +1,182 @@
 const resources = {
-  ptes: { name: "PTES", url: "https://pentest-standard.readthedocs.io/en/latest/" },
-  nmap: { name: "Nmap Documentation", url: "https://nmap.org/book/man.html" },
-  whatweb: { name: "WhatWeb", url: "https://github.com/urbanadventurer/WhatWeb" },
+  nmap: { name: "Nmap Reference Guide", url: "https://nmap.org/book/man.html" },
+  whatweb: { name: "WhatWeb Documentation", url: "https://github.com/urbanadventurer/WhatWeb" },
   burp: { name: "Burp Suite HTTP History", url: "https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history" },
-  samba: { name: "Samba testparm", url: "https://manpages.debian.org/stable/samba-common-bin/testparm.1.en.html", keywords: "SMB configuration" },
-  stride: { name: "OWASP Threat Modeling", url: "https://community.owasp.org/Threat_Modeling", keywords: "STRIDE flows trust boundaries" },
   cve: { name: "CVE Program", url: "https://www.cve.org/" },
-  pwstorage: { name: "OWASP Password Storage", url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", keywords: "hashing Argon2id scrypt bcrypt PBKDF2" },
-  hashcat: { name: "Hashcat", url: "https://hashcat.net/hashcat/", keywords: "hash hashing passwords" },
-  xss: { name: "OWASP XSS Prevention", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" },
-  cvss: { name: "FIRST CVSS", url: "https://www.first.org/cvss/v4.0/specification-document" },
+  cvss: { name: "FIRST CVSS", url: "https://www.first.org/cvss/" },
+  ptes: { name: "Pentest Execution Standard", url: "https://pentest-standard.readthedocs.io/en/latest/" },
 };
 
-const phases = [
+const stages = [
   {
     id: "reconnaissance",
     title: "Reconnaissance",
     tileTitle: "Reconnais\u00adsance",
-    references: ["nmap", "whatweb", "burp", "cve", "samba"],
-    groups: [
+    purpose: "Discover exposed ports and identify the services behind them.",
+    when: "Start with an authorized host. If you identify HTTP or HTTPS, continue to Web Enumeration.",
+    references: ["nmap"],
+    commands: [
       {
-        id: "workflow",
-        name: "Workflow",
-        note: "Use this workflow on systems you administer or in authorized labs such as Hack The Box.",
-        summary: "Network inventory → Web reconnaissance → HTTP review → Advisory review → Reporting",
-        steps: [
-          {
-            id: "workflow-network",
-            title: "Network reconnaissance with Nmap",
-            description: "Choose the checks that match what you need to verify on your local test host.",
-            commandIds: ["tcp-complet", "nmap-services", "nmap-version-all", "nmap-os", "workflow-udp", "nmap-no-discovery"],
-          },
-          {
-            id: "workflow-web",
-            title: "Web reconnaissance with WhatWeb",
-            description: "Identify technologies on your local web application and verify the results against your deployment records.",
-            commandIds: ["workflow-whatweb"],
-          },
-          {
-            id: "workflow-burp",
-            title: "HTTP review with Burp Suite",
-            description: "Use Proxy → HTTP history to review routes, methods, parameters, headers, and cookie attributes from your application. Use Repeater to resend an unchanged request and compare the response with the expected result.",
-          },
-          {
-            id: "workflow-advisories",
-            title: "Vulnerability and patch review",
-            description: "Compare installed versions and configurations with vendor advisories and CVE records. Run existing regression tests after applying a fix.",
-          },
-          {
-            id: "workflow-report",
-            title: "Validation and documentation",
-            description: "Record the account and permissions observed, redacted evidence, root causes, and fixes. Note failed checks and how you resolved them.",
-            commandIds: ["save-local-scan"],
-          },
-        ],
-        commands: [
-          {
-            id: "tcp-complet",
-            title: "Scan all local TCP ports",
-            code: "nmap -p- -T4 --min-rate=2000 <local IP address>",
-            flags: [
-              ["-p-", "Checks TCP ports 1 through 65,535."],
-              ["-T4", "Selects Nmap’s faster timing profile."],
-              ["--min-rate=2000", "Requests a minimum send rate of 2,000 packets per second."],
-            ],
-          },
-          {
-            id: "nmap-services",
-            title: "Identify services and versions",
-            code: "nmap -sC -sV -p <port list> <local IP address>",
-            hint: "Run the default NSE scripts and version probes on a comma-separated port list.",
-          },
-          {
-            id: "nmap-version-all",
-            title: "Probe an unidentified service",
-            code: "nmap -sV --version-all -p <port> <local IP address>",
-            hint: "Try every version-detection probe on the selected port.",
-          },
-          { id: "nmap-os", title: "Estimate the operating system", code: "sudo nmap -O --osscan-guess <local IP address>" },
-          { id: "workflow-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
-          {
-            id: "nmap-no-discovery",
-            title: "Scan when the host does not answer ping",
-            code: "nmap -Pn -n -sC -sV <local IP address>",
-            hint: "Skip host discovery and DNS lookups before running the scan.",
-          },
-          { id: "workflow-whatweb", title: "Identify web technologies", code: 'whatweb "http://<local host>:<port>/"' },
-          {
-            id: "save-local-scan",
-            title: "Save selected-port results",
-            code: "nmap -p <port list> -oA scan_initial <local IP address>",
-            flags: [
-              ["-p", "Checks the comma-separated ports found in step 1."],
-              ["-oA", "Saves scan_initial.nmap, scan_initial.xml, and scan_initial.gnmap."],
-            ],
-          },
-        ],
+        id: "tcp-complet", title: "Discover all TCP ports", code: "nmap -p- -T4 --min-rate=2000 <local IP address>",
+        description: "Checks all TCP ports with faster timings and a requested minimum of 2,000 packets per second.",
       },
       {
-        name: "Local TCP and UDP scans",
-        commands: [
-          { id: "scan-standard", title: "Scan the 1,000 most common TCP ports", code: "nmap <local IP address>" },
-          { id: "ports-nmap", title: "Check selected ports", code: "nmap -p <port list> <local IP address>", hint: "Enter a comma-separated port list." },
-          { id: "raison-nmap", title: "Explain the states of TCP ports 22 and 80", code: "nmap --reason -p22,80 <local IP address>" },
-          { id: "top-tcp", title: "Check the 20 most common TCP ports", code: "nmap --top-ports 20 <local IP address>" },
-          { id: "top-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
-        ],
+        id: "nmap-services", title: "Identify services and versions", code: "nmap -sC -sV -p <port list> <local IP address>",
+        description: "Runs the default NSE scripts and version probes against the comma-separated ports you found.",
       },
       {
-        name: "Local system and network",
-        commands: [
-          { id: "adresse-vpn", title: "Show the VPN interface’s IPv4 address", code: "ip -4 addr show <VPN interface>" },
-          { id: "linux-release", title: "Read the installed Linux release", code: "cat /etc/os-release" },
-        ],
+        id: "nmap-version-all", title: "Investigate an unidentified service", code: "nmap -sV --version-all -p <port> <local IP address>",
+        when: "Use when the first scan leaves a service unidentified.",
+        description: "Tries all version-detection probes on the selected port.",
       },
       {
-        name: "HTTP",
-        commands: [
-          { id: "local-web-ports", title: "Check local TCP ports 80, 8080, and 8000", code: "nmap -p80,8080,8000 <local IP address>" },
-          { id: "whatweb-local", title: "Identify technologies on your local site", code: 'whatweb "http://<local host>:<port>/"' },
-          { id: "reponse-http", title: "Show the response and headers", code: 'curl -i "http://<local host>:<port>/"' },
-          { id: "http-detaille", title: "Show request details", code: 'curl -v "http://<local host>:<port>/"' },
-          { id: "entetes-web-locaux", title: "Show only the headers", code: 'curl -I "http://<local host>:<port>/"' },
-          { id: "telecharger-http", title: "Save a file from the local server", code: 'curl -fS -o "<output file>" "http://<local host>:<port>/<remote path>"' },
-          { id: "serveur-http-local", title: "Serve a directory on the loopback interface", code: 'python3 -m http.server <port> --bind <loopback IP address> --directory "<directory path>"' },
-        ],
+        id: "workflow-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>",
+        when: "Use when the host is expected to expose UDP services.",
+        description: "Checks the 20 UDP ports ranked most common by Nmap.",
       },
+    ],
+    sections: [
       {
-        name: "SMB",
+        id: "nmap-advanced", title: "Advanced Nmap checks", purpose: "Adapt the scan to host discovery and OS identification.",
         commands: [
-          { id: "local-samba-config", title: "Validate the local Samba configuration", code: "testparm -s", hint: "Run on your Samba host to validate and print its effective configuration." },
+          {
+            id: "nmap-os", title: "Estimate the operating system", code: "sudo nmap -O --osscan-guess <local IP address>",
+            when: "Use when you need to compare a network fingerprint with the host inventory.",
+            description: "Reports likely OS matches.",
+          },
+          {
+            id: "nmap-no-discovery", title: "Scan a known host that does not answer discovery", code: "nmap -Pn -n -sC -sV <local IP address>",
+            when: "Use when you have confirmed the test host is online.",
+            description: "Skips host discovery and DNS resolution, then runs default scripts and version checks.",
+          },
         ],
       },
     ],
   },
   {
-    id: "modelisation",
-    title: "Threat Modeling",
-    references: ["stride", "ptes"],
-    groups: [
+    id: "web-enumeration",
+    title: "Web Enumeration",
+    purpose: "Identify web technologies and review the application’s HTTP behavior.",
+    when: "Open this stage when you find HTTP or HTTPS. Choose a subsection for the evidence you need.",
+    references: ["whatweb", "burp"],
+    commands: [
       {
-        name: "Project and dependencies",
+        id: "whatweb-local", title: "Identify web technologies", code: 'whatweb "<local URL>"',
+        description: "Reports technologies visible in the response from your local web application.",
+      },
+    ],
+    sections: [
+      {
+        id: "directory-discovery", title: "Directory & File Discovery", purpose: "Check files and routes against the intended deployment.",
+        when: "Use when a resource is missing from navigation or you need to review the web root. Gobuster and ffuf are alternative tools for wordlist-based discovery.",
         commands: [
-          { id: "inventaire-repo", title: "List tracked files", code: "git ls-files" },
-          { id: "dependances-node", title: "Read declared dependencies", code: "npm pkg get dependencies devDependencies" },
+          { id: "inventaire-repo", title: "List tracked files", code: "git ls-files", description: "Run in your application repository to compare files with the intended deployment." },
         ],
       },
       {
-        name: "Services",
+        id: "virtual-host-discovery", title: "Virtual Host Discovery", purpose: "Review configured site names and their DNS records.",
+        when: "Use when several sites share an IP address. Identify the base domain and check its DNS resolution. HTTP virtual hosts select a site by hostname, and DNS records map names to addresses. Account for default pages and redirects when comparing responses.",
         commands: [
-          { id: "ports-modele", title: "List running systemd services", code: "systemctl list-units --type=service --state=running --no-pager" },
+          { id: "vhost-dns", title: "Check the base domain’s DNS record", code: 'dig +short "<base domain>"', description: "Shows the address or record returned by DNS." },
+          {
+            id: "configuration-nginx", title: "List configured Nginx server names",
+            code: "nginx -T 2>/dev/null | grep -E '^[[:space:]]*server_name[[:space:]]'",
+            description: "Run on your Nginx host to see the names in its configuration.",
+          },
+        ],
+      },
+      {
+        id: "workflow-burp", title: "HTTP Analysis", purpose: "Inspect known requests, response headers, and status codes.",
+        when: "Use Burp Proxy and HTTP History to review traffic from your application. Use Repeater to resend a known request. Intruder can repeat test cases across different input values in your own application.",
+        commands: [
+          { id: "whatweb-detail", title: "Probe web technologies in more detail", code: 'whatweb -a 3 "<local URL>"', when: "Use on your local app when the basic check leaves a technology unidentified.", description: "Sends additional technology-specific probes." },
+          { id: "entetes-web-locaux", title: "Read response headers", code: 'curl -I "<local URL>"', description: "Sends a HEAD request to show the status and headers." },
         ],
       },
     ],
   },
   {
     id: "vulnerabilites",
-    title: "Vulnerability Analysis",
-    tileTitle: "Vulnera\u00adbility Analysis",
-    references: ["cve", "pwstorage", "hashcat", "xss"],
-    groups: [
-      {
-        name: "Dependencies",
-        commands: [
-          { id: "audit-npm", title: "Check npm security advisories", code: "npm audit --omit=dev", hint: "Run in your project directory. npm queries the configured registry." },
-        ],
-      },
-      {
-        name: "Web",
-        commands: [
-          { id: "en-tetes-http", title: "Inspect HTTPS response headers", code: 'curl --silent --show-error --head "<HTTPS URL>"' },
-        ],
-      },
-      {
-        name: "Permissions",
-        commands: [
-          { id: "droits-fichier", title: "Read a file’s mode, owner, and group", code: `stat -c '%A %U:%G %n' "<file path>"` },
-        ],
-      },
+    title: "Vulnerability Research",
+    tileTitle: "Vulnera\u00adbility Research",
+    purpose: "Match observed versions and configurations to security advisories.",
+    when: "Use after identifying a component. Check the vendor’s affected versions and whether the installed package includes a backported fix.",
+    references: ["cve"],
+    commands: [
+      { id: "package-version", title: "Read an installed package version", code: 'dpkg-query -W "<package name>"', description: "Reports the package version on a Debian-based host." },
+      { id: "audit-npm", title: "Review project dependency advisories", code: "npm audit --omit=dev", description: "Checks production dependencies in your project against its configured npm registry." },
     ],
   },
   {
     id: "exploitation",
-    title: "Exploitation",
-    references: ["xss", "ptes"],
-    groups: [
-      {
-        name: "Control validation",
-        commands: [
-          { id: "tests-locaux", title: "Rerun existing Python tests", code: "python -m unittest discover -v" },
-        ],
-      },
-      {
-        name: "Results",
-        commands: [
-          { id: "comparer-resultats", title: "Compare expected and observed results", code: 'diff -u "<expected file>" "<observed file>"' },
-          { id: "version-testee", title: "Record the tested revision", code: "git rev-parse HEAD\ngit status --short" },
-        ],
-      },
+    title: "Initial Exploitation",
+    purpose: "Validate the expected security behavior in an isolated environment.",
+    when: "Use the application’s existing security tests to confirm a finding or check a fix.",
+    commands: [
+      { id: "tests-locaux", title: "Run existing Python regression tests", code: "python -m unittest discover -v", description: "Runs the project’s existing tests and reports individual outcomes." },
     ],
   },
   {
     id: "post-exploitation",
-    title: "Post-exploitation",
-    keywords: "Linux inventory permissions impact",
-    references: ["ptes"],
-    groups: [
-      {
-        id: "privesc",
-        name: "PrivEsc audit",
-        steps: [
-          {
-            id: "workflow-linux",
-            title: "Linux inventory",
-            description: "From an authorized Linux session, confirm the active account, OS, files, processes, and local listeners.",
-            commandIds: ["workflow-account", "workflow-os", "workflow-files", "workflow-processes", "local-tcp-services"],
-          },
-          {
-            id: "workflow-permissions",
-            title: "Permissions and scheduled tasks",
-            description: "Review permissions on the files you administer and verify that scheduled tasks match the host’s intended configuration.",
-            commandIds: ["workflow-file-access", "workflow-schedules"],
-          },
-        ],
-        commands: [
-          { id: "workflow-account", title: "Account and groups", code: "whoami\nid\ngroups" },
-          { id: "workflow-os", title: "Kernel and OS release", code: "uname -a\ncat /etc/os-release" },
-          { id: "workflow-files", title: "Files and local accounts", code: "ls -la\ncat /etc/passwd" },
-          { id: "workflow-processes", title: "Process list and hierarchy", code: "ps auxww\nps -ef --forest" },
-          { id: "local-tcp-services", title: "Listening TCP ports and processes", code: "ss -lntp" },
-          { id: "workflow-file-access", title: "Permissions on a specific path", code: 'ls -ld "<path>"\nnamei -l "<path>"' },
-          { id: "workflow-schedules", title: "Cron and systemd schedules", code: "cat /etc/crontab\nsystemctl list-timers --all" },
-        ],
-      },
-      {
-        name: "Accounts and files",
-        commands: [
-          { id: "identite-linux", title: "Check your identity and groups", code: "whoami\nid" },
-          { id: "comptes-linux", title: "List accounts known to the system", code: "getent passwd" },
-          { id: "repertoire-actuel", title: "Show the current directory", code: "pwd" },
-          { id: "fichiers-caches", title: "List files, including hidden files", code: "ls -la" },
-          { id: "type-fichier", title: "Identify a file’s type", code: 'file "<file path>"' },
-        ],
-      },
-      {
-        name: "Permissions",
-        commands: [
-          { id: "permissions-dossier", title: "Read a directory’s permissions", code: 'ls -ld "<directory path>"' },
-          { id: "chemin-linux", title: "Read permissions along a path", code: 'namei -l "<file path>"' },
-        ],
-      },
-      {
-        name: "Services",
-        commands: [
-          { id: "services-actifs", title: "List running services", code: "systemctl list-units --type=service --state=running" },
-          { id: "configuration-service", title: "Read a systemd unit’s configuration", code: 'systemctl cat "<unit name>"' },
-          { id: "configuration-nginx", title: "Read enabled Nginx configurations", code: "cat /etc/nginx/sites-enabled/*" },
-        ],
-      },
-      {
-        name: "Scheduled tasks",
-        commands: [
-          { id: "cron-systeme", title: "Read the system crontab", code: "cat /etc/crontab" },
-          { id: "cron-supplementaire", title: "List additional cron files", code: "ls -la /etc/cron.d/" },
-          { id: "taches-systemd", title: "List systemd timers", code: "systemctl list-timers --all" },
-        ],
-      },
-      {
-        name: "Local SSH keys",
-        commands: [
-          { id: "paire-ed25519", title: "Generate an Ed25519 key pair", code: 'ssh-keygen -t ed25519 -f "<private key path>"' },
-          { id: "cle-publique", title: "Show the public key", code: 'cat "<public key path>"' },
-          { id: "permissions-cle", title: "Restrict access to the private key", code: 'chmod 600 "<private key path>"' },
-        ],
-      },
+    title: "Post-Exploitation Enumeration",
+    tileTitle: "Post-exploitation",
+    purpose: "Record the account, operating system, processes, and listeners in a Linux session.",
+    when: "Use once you have an authorized Linux session and need a baseline of the host.",
+    commands: [
+      { id: "identite-linux", title: "Show the current account", code: "whoami", description: "Prints the effective username." },
+      { id: "account-id", title: "Show user and group IDs", code: "id", description: "Shows the effective user and group IDs and group memberships." },
+      { id: "account-groups", title: "List group memberships", code: "groups", description: "Prints the groups of the current account." },
+      { id: "linux-kernel", title: "Read kernel and architecture details", code: "uname -a", description: "Reports kernel and machine information." },
+      { id: "linux-release", title: "Read the Linux distribution release", code: "cat /etc/os-release", description: "Shows the distribution and release recorded by the OS." },
+      { id: "workflow-processes", title: "List processes with full arguments", code: "ps auxww", description: "Shows processes, owners, and full command lines." },
+      { id: "local-tcp-services", title: "List listening TCP sockets", code: "ss -lntp", description: "Shows local TCP listeners and process details available to the account." },
+      { id: "home-directories", title: "Review home directory entries", code: "ls -la /home/", description: "Shows directory names, owners, and permissions." },
+    ],
+  },
+  {
+    id: "internal-services",
+    title: "Internal Service Enumeration",
+    tileTitle: "Internal Services",
+    purpose: "Identify local services and verify their network bindings.",
+    when: "Use from the host to identify listeners and units you cannot verify from the network.",
+    commands: [
+      { id: "services-actifs", title: "List running systemd services", code: "systemctl list-units --type=service --state=running", description: "Lists services that systemd reports as active and running." },
+      { id: "local-udp-services", title: "List local UDP sockets", code: "ss -lunp", description: "Shows listening UDP sockets and available process details." },
+      { id: "configuration-service", title: "Read a systemd unit", code: 'systemctl cat "<unit name>"', description: "Shows the unit and its drop-in configuration." },
+    ],
+  },
+  {
+    id: "privesc",
+    title: "Privilege Escalation",
+    purpose: "Review administrative permissions and scheduled tasks for misconfiguration.",
+    when: "Use when auditing the expected access of an account and the configuration of a host you administer.",
+    commands: [
+      { id: "sudo-policy", title: "Review the current account’s sudo policy", code: "sudo -l", description: "Lists allowed sudo commands for the current account." },
+      { id: "workflow-file-access", title: "Review permissions along a path", code: 'namei -l "<path>"', description: "Shows permissions and ownership for each path component." },
+      { id: "cron-systeme", title: "Read the system crontab", code: "cat /etc/crontab", description: "Shows system-wide cron entries and the users they run as." },
+      { id: "taches-systemd", title: "List systemd timers", code: "systemctl list-timers --all", description: "Shows configured timers and their scheduled services." },
+    ],
+  },
+  {
+    id: "verification",
+    title: "Verification",
+    purpose: "Compare observations with expected results and record the tested revision.",
+    when: "Use after reproducing a safe check or applying a fix.",
+    commands: [
+      { id: "comparer-resultats", title: "Compare expected and observed output", code: 'diff -u "<expected file>" "<observed file>"', description: "Shows the differences in a compact, line-by-line format." },
+      { id: "version-testee", title: "Record the tested Git revision", code: "git rev-parse HEAD", description: "Prints the commit ID for your test record." },
     ],
   },
   {
     id: "rapport",
     title: "Reporting",
-    references: ["cvss", "ptes"],
-    groups: [
-      {
-        name: "Evidence",
-        commands: [
-          { id: "horodatage-utc", title: "Record a UTC timestamp", code: "date -u +'%Y-%m-%dT%H:%M:%SZ'" },
-          { id: "empreinte-preuve", title: "Create and verify a checksum", code: 'sha256sum "<evidence file>" > "<checksum file>"\nsha256sum -c "<checksum file>"' },
-        ],
-      },
-      {
-        name: "Writing",
-        commands: [
-          { id: "modele-constat", title: "Finding template", code: "Finding title\nAsset and version\nStatus and severity\nObservation\nRedacted evidence and UTC timestamp\nImpact and scope\nProposed fix\nRetest criteria" },
-          { id: "relire-publication", title: "Review files staged for commit", code: "git diff --cached --name-only\ngit diff --cached" },
-        ],
-      },
+    purpose: "Capture reproducible findings, redacted evidence, and remediation.",
+    when: "Use when a finding is ready to document. Record the scope, observed behavior, impact, fix, and retest criteria.",
+    references: ["ptes", "cvss"],
+    commands: [
+      { id: "save-local-scan", title: "Save selected-port results", code: "nmap -p <port list> -oA scan_initial <local IP address>", description: "Writes normal, XML, and grepable output with the scan_initial prefix." },
+      { id: "horodatage-utc", title: "Record a UTC timestamp", code: "date -u +'%Y-%m-%dT%H:%M:%SZ'", description: "Captures the time for your evidence record." },
+      { id: "empreinte-preuve", title: "Record a checksum for an evidence file", code: 'sha256sum "<evidence file>"', description: "Prints a digest you can use to verify the file later." },
     ],
   },
 ];

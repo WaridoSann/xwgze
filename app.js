@@ -1,9 +1,12 @@
 const phaseIcons = {
   reconnaissance: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 6-6M12 12h.01"/>',
-  modelisation: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4m-6 4v-4h12v4"/>',
+  "internal-services": '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4m-6 4v-4h12v4"/>',
   vulnerabilites: '<path d="M12 3 4.5 6v5.3c0 4.3 3 7.6 7.5 9.7 4.5-2.1 7.5-5.4 7.5-9.7V6L12 3Z"/><path d="m9 12 2 2 4-4"/>',
   exploitation: '<path d="m4 7 4.5 4.5L4 16m8 0h7"/>',
   "post-exploitation": '<path d="M3 12h4l2.5-6 4.5 12 2.5-6H21"/>',
+  "web-enumeration": '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a12 12 0 0 1 0 16 12 12 0 0 1 0-16Z"/>',
+  privesc: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3m-4 4v2"/>',
+  verification: '<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
   rapport: '<path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M13 3v6h6M8 13h8m-8 4h8"/>',
 };
 
@@ -18,10 +21,32 @@ const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[character]);
 
-function pageHeader(title) {
-  return `<nav aria-label="Notebook navigation">
-    <a href="#accueil">All phases</a>
-    <button type="button" data-search>Search</button>
+const legacyEntries = {
+  workflow: "reconnaissance",
+  "workflow-network": "reconnaissance",
+  "workflow-web": "web-enumeration",
+  "workflow-whatweb": "whatweb-local",
+  "workflow-advisories": "vulnerabilites",
+  "workflow-linux": "post-exploitation",
+  "workflow-account": "identite-linux",
+  "workflow-os": "linux-release",
+  "workflow-files": "home-directories",
+  "workflow-permissions": "privesc",
+  "workflow-schedules": "taches-systemd",
+  "workflow-report": "rapport",
+};
+
+function icon(id) {
+  return `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${phaseIcons[id]}</svg>`;
+}
+
+function pageHeader(title, includeReferences = true) {
+  return `<nav aria-label="Workflow navigation">
+    <a href="#accueil">All stages</a>
+    <div class="nav-actions">
+      ${includeReferences ? '<a href="#ressources">References</a>' : ""}
+      <button type="button" data-search>Search</button>
+    </div>
   </nav>
   <h1>${escapeHTML(title)}</h1>`;
 }
@@ -29,104 +54,116 @@ function pageHeader(title) {
 function renderHome() {
   main.className = "home";
   main.innerHTML = `
-    <h1 class="visually-hidden">PTES Notebook</h1>
-    <nav aria-label="PTES phases">
-      <ul class="phase-grid">${phases.map(phase => `
-        <li><a href="#${phase.id}" class="phase-link" aria-label="${escapeHTML(phase.title)}">
-          <span class="phase-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${phaseIcons[phase.id]}</svg></span>
-          <span>${escapeHTML(phase.tileTitle || phase.title)}</span>
+    <h1 class="visually-hidden">Pentesting Workflow</h1>
+    <nav aria-label="Workflow stages">
+      <ul class="phase-grid">${stages.map(stage => `
+        <li><a href="#${stage.id}" class="phase-link" aria-label="${escapeHTML(stage.title)}">
+          <span class="phase-icon">${icon(stage.id)}</span>
+          <span>${escapeHTML(stage.tileTitle || stage.title)}</span>
         </a></li>`).join("")}
       </ul>
     </nav>`;
 }
 
-function renderCommand(command, step) {
-  const title = escapeHTML(command.title);
-  const heading = step ? `${step}. ${title}` : title;
-  const flags = command.flags ? `<dl class="command-flags">${command.flags.map(([flag, description]) =>
-    `<dt><code>${escapeHTML(flag)}</code></dt><dd>${escapeHTML(description)}</dd>`
-  ).join("")}</dl>` : "";
-  return `<li class="command" id="item-${command.id}" tabindex="-1">
-    <div class="command-text">
-      <p class="command-title">${heading}</p>
-      ${command.why ? `<p class="command-hint">${escapeHTML(command.why)}</p>` : ""}
-      <pre><code>${escapeHTML(command.code)}</code></pre>
-      ${flags}
-      ${command.hint ? `<p class="command-hint">${escapeHTML(command.hint)}</p>` : ""}
-    </div>
-    <button type="button" aria-label="Copy ${title}" data-copy>Copy</button>
-  </li>`;
-}
-
-function referenceLinks(ids) {
-  return `<ul class="reference-list">${ids.map(id => {
-    const resource = resources[id];
-    return `<li id="item-${id}" tabindex="-1"><a href="${escapeHTML(resource.url)}">${escapeHTML(resource.name)}</a></li>`;
+function renderCommands(commands) {
+  return `<ul class="command-list">${commands.map(command => {
+    const title = escapeHTML(command.title);
+    return `<li class="command" id="item-${command.id}" tabindex="-1">
+      <p class="command-title">${title}</p>
+      ${command.when ? `<p class="guidance">${escapeHTML(command.when)}</p>` : ""}
+      <div class="terminal">
+        <pre><code>${escapeHTML(command.code)}</code></pre>
+        <button type="button" aria-label="Copy ${title}" data-copy>Copy</button>
+      </div>
+      <p class="command-description">${escapeHTML(command.description)}</p>
+    </li>`;
   }).join("")}</ul>`;
 }
 
-function renderWorkflow(group) {
-  const commands = new Map(group.commands.map(command => [command.id, command]));
-  return `<ol class="workflow-steps">${group.steps.map(step => `
-    <li class="workflow-step" id="item-${step.id}" tabindex="-1">
-      <h3>${escapeHTML(step.title)}</h3>
-      <p class="command-hint">${escapeHTML(step.description)}</p>
-      ${step.commandIds ? `<ul class="command-list">${step.commandIds.map(id => renderCommand(commands.get(id))).join("")}</ul>` : ""}
-    </li>`).join("")}
-  </ol>
-  ${group.summary ? `<p class="command-hint workflow-summary">${escapeHTML(group.summary)}</p>` : ""}`;
+function referenceLinks(ids, listClass) {
+  return `<ul class="${listClass}">${ids.map(id => {
+    const resource = resources[id];
+    return `<li><a href="${escapeHTML(resource.url)}">${escapeHTML(resource.name)}</a></li>`;
+  }).join("")}</ul>`;
 }
 
-function renderGroup(group) {
-  const listTag = group.ordered ? "ol" : "ul";
-  const anchor = group.id ? ` id="item-${group.id}" tabindex="-1"` : "";
-  const content = group.steps ? renderWorkflow(group) : `<${listTag} class="command-list">${group.commands.map((command, index) =>
-    renderCommand(command, group.ordered ? index + 1 : undefined)
-  ).join("")}</${listTag}>`;
-  return `<section${anchor}>
-    <h2>${escapeHTML(group.name)}</h2>
-    ${group.note ? `<p class="command-hint">${escapeHTML(group.note)}</p>` : ""}
-    ${content}
-  </section>`;
+function renderDisclosure(item, body, className) {
+  return `<details class="disclosure ${className}" id="item-${item.id}">
+    <summary aria-expanded="false" aria-controls="panel-${item.id}">
+      <span class="disclosure-text">
+        <span class="disclosure-title">${escapeHTML(item.title)}</span>
+        <span class="disclosure-purpose">${escapeHTML(item.purpose)}</span>
+      </span>
+    </summary>
+    <div id="panel-${item.id}" class="disclosure-content">${body}</div>
+  </details>`;
 }
 
-function renderPhase(phase) {
-  main.className = "document";
-  main.innerHTML = `${pageHeader(phase.title)}
-    ${phase.groups.map(renderGroup).join("")}
-    <section class="references">
-      <h2>References</h2>
-      ${referenceLinks(phase.references)}
-    </section>`;
+function renderGuidance(item) {
+  return item.when ? `<p class="guidance"><strong>When to use.</strong> ${escapeHTML(item.when)}</p>` : "";
+}
+
+function renderWorkflow() {
+  main.className = "document workflow-page";
+  main.innerHTML = `${pageHeader("Workflow")}
+    <div class="stages">${stages.map(stage => renderDisclosure(stage, `
+      ${renderGuidance(stage)}
+      ${renderCommands(stage.commands)}
+      ${(stage.sections || []).map(section => renderDisclosure(section,
+        renderGuidance(section) + renderCommands(section.commands), "subsection"
+      )).join("")}
+      ${stage.references ? referenceLinks(stage.references, "stage-references") : ""}
+    `, "stage")).join("")}</div>`;
 }
 
 function renderResources() {
-  main.className = "document";
-  main.innerHTML = `${pageHeader("Resources")}${referenceLinks(Object.keys(resources))}`;
+  main.className = "document resources-page";
+  main.innerHTML = `${pageHeader("References", false)}
+    <ul class="reference-list">${Object.entries(resources).map(([id, resource]) =>
+      `<li id="item-${id}" tabindex="-1"><a href="${escapeHTML(resource.url)}">${escapeHTML(resource.name)}</a></li>`
+    ).join("")}</ul>`;
 }
 
+function syncExpanded(details) {
+  details.firstElementChild.setAttribute("aria-expanded", String(details.open));
+}
+
+main.addEventListener("toggle", event => {
+  if (event.target instanceof HTMLDetailsElement) syncExpanded(event.target);
+}, true);
+
 function navigate(moveFocus = false) {
-  let [page, entry] = location.hash.slice(1).split("/");
-  if (page === "reconnaissance" && entry) {
-    const audit = phases.find(phase => phase.id === "post-exploitation")?.groups.find(group => group.id === "privesc");
-    if (audit?.steps.some(step => step.id === entry) || audit?.commands.some(command => command.id === entry)) {
-      page = "post-exploitation";
-      history.replaceState(null, "", `#${page}/${entry}`);
-    }
+  const fragment = location.hash.slice(1);
+  const [page, entry] = fragment.split("/");
+  const resource = page === "ressources";
+  const namedStage = page === "modelisation" ? "vulnerabilites" : page;
+  const entryId = legacyEntries[entry] || entry;
+  const selected = resource ? undefined : workflowIndex.find(item => item.id === entryId) ||
+    workflowIndex.find(item => item.id === namedStage);
+  let target;
+
+  if (resource) {
+    renderResources();
+    target = entry && document.getElementById(`item-${entry}`);
+    document.title = "References · Pentesting Workflow";
+  } else if (selected || page === "workflow") {
+    if (!main.classList.contains("workflow-page")) renderWorkflow();
+    target = selected && document.getElementById(`item-${selected.id}`);
+    if (selected && location.hash !== selected.href) history.replaceState(null, "", selected.href);
+    document.title = selected ? `${selected.context || selected.title} · Pentesting Workflow` : "Pentesting Workflow";
+  } else {
+    renderHome();
+    document.title = "Pentesting Workflow";
   }
-  const phase = phases.find(item => item.id === page);
-  const title = phase?.title || (page === "ressources" ? "Resources" : "");
 
-  if (phase) renderPhase(phase);
-  else if (page === "ressources") renderResources();
-  else renderHome();
-
-  document.title = title ? `${title} · PTES Notebook` : "PTES Notebook";
-
-  const target = entry && document.getElementById(`item-${entry}`);
   if (target) {
+    for (let details = target.closest("details"); details; details = details.parentElement.closest("details")) {
+      details.open = true;
+      syncExpanded(details);
+    }
     target.scrollIntoView({ block: "start" });
-    target.focus({ preventScroll: true });
+    const focusTarget = target instanceof HTMLDetailsElement ? target.firstElementChild : target;
+    focusTarget.focus({ preventScroll: true });
   } else if (moveFocus) {
     window.scrollTo(0, 0);
     main.focus({ preventScroll: true });
@@ -137,31 +174,38 @@ function normalize(value) {
   return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
+function workflowSearchItem(item, stage) {
+  return {
+    id: item.id,
+    title: item.title,
+    context: item === stage ? "" : stage.title,
+    href: item === stage ? `#${stage.id}` : `#${stage.id}/${item.id}`,
+    keywords: [item.code, item.purpose, item.when, item.description].filter(Boolean).join(" "),
+  };
+}
+
+const workflowIndex = stages.flatMap(stage => [
+  workflowSearchItem(stage, stage),
+  ...stage.commands.map(command => workflowSearchItem(command, stage)),
+  ...(stage.sections || []).flatMap(section => [
+    workflowSearchItem(section, stage),
+    ...section.commands.map(command => workflowSearchItem(command, stage)),
+  ]),
+]);
+
 const searchIndex = [
-  ...phases.map(phase => ({
-    title: phase.title, href: `#${phase.id}`, keywords: phase.keywords || "",
-  })),
-  ...phases.flatMap(phase => phase.groups.flatMap(group => [
-    ...(group.id ? [{ title: group.name, context: phase.title, href: `#${phase.id}/${group.id}`, keywords: "" }] : []),
-    ...(group.steps || []).map(step => ({
-      title: step.title, context: phase.title, href: `#${phase.id}/${step.id}`, keywords: step.description,
-    })),
-    ...group.commands.map(command => ({
-      title: command.title, context: phase.title, href: `#${phase.id}/${command.id}`,
-      keywords: `${group.name} ${command.code} ${command.hint || ""} ${command.why || ""}`,
-    })),
-  ])),
+  ...workflowIndex,
   ...Object.entries(resources).map(([id, resource]) => ({
-    title: resource.name, context: "Resources", href: `#ressources/${id}`, keywords: resource.keywords || "",
+    title: resource.name, context: "References", href: `#ressources/${id}`, keywords: "",
   })),
-].map(item => ({ ...item, text: normalize(`${item.title} ${item.context || ""} ${item.keywords}`) }));
+].map(item => ({ ...item, text: normalize(`${item.title} ${item.context} ${item.keywords}`) }));
 
 function showSearchResults() {
   const query = normalize(searchInput.value.trim());
   const words = query.split(/\s+/);
   const matches = query
     ? searchIndex.filter(item => words.every(word => item.text.includes(word)))
-    : searchIndex.slice(0, phases.length);
+    : searchIndex.filter(item => !item.context);
   searchSummary.textContent = matches.length ? "" : "No results.";
   searchResults.innerHTML = matches.map(item => `<li><a href="${item.href}">
     <span>${escapeHTML(item.title)}</span>
@@ -178,7 +222,7 @@ function openSearch() {
 }
 
 async function copyCommand(button) {
-  const code = button.closest(".command").querySelector("code");
+  const code = button.closest(".command").querySelector("pre code");
   let copied = true;
   try {
     await navigator.clipboard.writeText(code.textContent);
