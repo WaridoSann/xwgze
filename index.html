@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Carnet de pentest de WaridoSann. Six phases PTES, commandes d’audit, checklists et références.">
+  <meta name="theme-color" content="#101417">
+  <title>Carnet PTES · WaridoSann</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./notes.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au contenu</a>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#accueil">
+        <span class="brand-mark" data-icon="terminal"></span>
+        <span><strong>Carnet PTES</strong><small>WaridoSann</small></span>
+      </a>
+      <nav id="navigation" aria-label="Navigation principale"></nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/WaridoSann/xwgze"><span data-icon="github"></span> Dépôt GitHub</a>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-location">
+          <button type="button" class="icon-button menu-button" id="menu-button" aria-label="Ouvrir le menu" aria-controls="sidebar" aria-expanded="false"><span data-icon="menu"></span></button>
+          <span class="breadcrumb" id="breadcrumb">Vue d’ensemble</span>
+        </div>
+        <button type="button" class="search-trigger" id="search-trigger" aria-label="Rechercher dans le carnet">
+          <span data-icon="search"></span><span class="search-label">Rechercher</span><kbd>Ctrl K</kbd>
+        </button>
+      </header>
+      <main id="main" tabindex="-1">
+        <noscript>Active JavaScript pour afficher les fiches et la recherche du carnet.</noscript>
+      </main>
+    </div>
+  </div>
+  <dialog id="search-dialog" aria-label="Rechercher dans le carnet">
+    <div class="search-dialog-bar">
+      <span data-icon="search"></span>
+      <input type="search" id="search-input" aria-label="Mot-clé ou commande" placeholder="Mot-clé ou commande…" autocomplete="off">
+      <form method="dialog"><button type="submit" class="icon-button" aria-label="Fermer la recherche"><span data-icon="close"></span></button></form>
+    </div>
+    <p class="search-summary" id="search-summary" role="status"></p>
+    <ul id="search-results" class="search-results"></ul>
+  </dialog>
+  <p class="toast" id="toast" role="status" hidden></p>
+</body>
+</html>
