@@ -74,7 +74,7 @@ function renderWorkflow(group) {
       ${step.commandIds ? `<ul class="command-list">${step.commandIds.map(id => renderCommand(commands.get(id))).join("")}</ul>` : ""}
     </li>`).join("")}
   </ol>
-  <p class="command-hint workflow-summary">${escapeHTML(group.summary)}</p>`;
+  ${group.summary ? `<p class="command-hint workflow-summary">${escapeHTML(group.summary)}</p>` : ""}`;
 }
 
 function renderGroup(group) {
@@ -106,7 +106,14 @@ function renderResources() {
 }
 
 function navigate(moveFocus = false) {
-  const [page, entry] = location.hash.slice(1).split("/");
+  let [page, entry] = location.hash.slice(1).split("/");
+  if (page === "reconnaissance" && entry) {
+    const audit = phases.find(phase => phase.id === "post-exploitation")?.groups.find(group => group.id === "privesc");
+    if (audit?.steps.some(step => step.id === entry) || audit?.commands.some(command => command.id === entry)) {
+      page = "post-exploitation";
+      history.replaceState(null, "", `#${page}/${entry}`);
+    }
+  }
   const phase = phases.find(item => item.id === page);
   const title = phase?.title || (page === "ressources" ? "Resources" : "");
 

@@ -23,7 +23,7 @@ const phases = [
         id: "workflow",
         name: "Workflow",
         note: "Use this workflow on systems you administer or in authorized labs such as Hack The Box.",
-        summary: "Network inventory → Web reconnaissance → HTTP review → Advisory review → Linux inventory → Permission review → Reporting",
+        summary: "Network inventory → Web reconnaissance → HTTP review → Advisory review → Reporting",
         steps: [
           {
             id: "workflow-network",
@@ -48,18 +48,6 @@ const phases = [
             description: "Compare installed versions and configurations with vendor advisories and CVE records. Run existing regression tests after applying a fix.",
           },
           {
-            id: "workflow-linux",
-            title: "Linux inventory",
-            description: "From an authorized Linux session, confirm the active account, OS, files, processes, and local listeners.",
-            commandIds: ["workflow-account", "workflow-os", "workflow-files", "workflow-processes", "local-tcp-services"],
-          },
-          {
-            id: "workflow-permissions",
-            title: "Permissions and scheduled tasks",
-            description: "Review permissions on the files you administer and verify that scheduled tasks match the host’s intended configuration.",
-            commandIds: ["workflow-file-access", "workflow-schedules"],
-          },
-          {
             id: "workflow-report",
             title: "Validation and documentation",
             description: "Record the account and permissions observed, redacted evidence, root causes, and fixes. Note failed checks and how you resolved them.",
@@ -78,13 +66,6 @@ const phases = [
           },
           { id: "workflow-udp", title: "Check the 20 most common UDP ports", code: "sudo nmap -sU --top-ports 20 <local IP address>" },
           { id: "workflow-whatweb", title: "Identify web technologies", code: 'whatweb "http://<local host>:<port>/"' },
-          { id: "workflow-account", title: "Account and groups", code: "whoami\nid\ngroups" },
-          { id: "workflow-os", title: "Kernel and OS release", code: "uname -a\ncat /etc/os-release" },
-          { id: "workflow-files", title: "Files and local accounts", code: "ls -la\ncat /etc/passwd" },
-          { id: "workflow-processes", title: "Process list and hierarchy", code: "ps auxww\nps -ef --forest" },
-          { id: "local-tcp-services", title: "Listening TCP ports and processes", code: "ss -lntp" },
-          { id: "workflow-file-access", title: "Permissions on a specific path", code: 'ls -ld "<path>"\nnamei -l "<path>"' },
-          { id: "workflow-schedules", title: "Cron and systemd schedules", code: "cat /etc/crontab\nsystemctl list-timers --all" },
           {
             id: "save-local-scan",
             title: "Save selected-port results",
@@ -206,6 +187,33 @@ const phases = [
     keywords: "Linux inventory permissions impact",
     references: ["ptes"],
     groups: [
+      {
+        id: "privesc",
+        name: "PrivEsc audit",
+        steps: [
+          {
+            id: "workflow-linux",
+            title: "Linux inventory",
+            description: "From an authorized Linux session, confirm the active account, OS, files, processes, and local listeners.",
+            commandIds: ["workflow-account", "workflow-os", "workflow-files", "workflow-processes", "local-tcp-services"],
+          },
+          {
+            id: "workflow-permissions",
+            title: "Permissions and scheduled tasks",
+            description: "Review permissions on the files you administer and verify that scheduled tasks match the host’s intended configuration.",
+            commandIds: ["workflow-file-access", "workflow-schedules"],
+          },
+        ],
+        commands: [
+          { id: "workflow-account", title: "Account and groups", code: "whoami\nid\ngroups" },
+          { id: "workflow-os", title: "Kernel and OS release", code: "uname -a\ncat /etc/os-release" },
+          { id: "workflow-files", title: "Files and local accounts", code: "ls -la\ncat /etc/passwd" },
+          { id: "workflow-processes", title: "Process list and hierarchy", code: "ps auxww\nps -ef --forest" },
+          { id: "local-tcp-services", title: "Listening TCP ports and processes", code: "ss -lntp" },
+          { id: "workflow-file-access", title: "Permissions on a specific path", code: 'ls -ld "<path>"\nnamei -l "<path>"' },
+          { id: "workflow-schedules", title: "Cron and systemd schedules", code: "cat /etc/crontab\nsystemctl list-timers --all" },
+        ],
+      },
       {
         name: "Accounts and files",
         commands: [
